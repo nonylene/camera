@@ -3,6 +3,7 @@
 import serial
 import time
 import struct
+import datetime
 
 def main():
     cam = serial.Serial('/dev/ttyAMA0',38400,timeout=0.1)
@@ -12,22 +13,21 @@ def main():
 def camset(cam):
     time.sleep(0.25)
     print(cam)
-    #reset
+    # reset
     cam.write(b'\x56\x00\x26\x00')
-    time.sleep(2.5)
+    time.sleep(1.0)
     read(cam)
-    print("setting end...")
+    print('finish setting...')
 
 def capture(cam):
-    #takepic
+    # takepic
     cam.write(b'\x56\x00\x36\x01\x00')
-    print("hoe")
     read(cam)
-    time.sleep(4.0)
-    #getsize
+    time.sleep(2.0)
+    # getsize
     cam.write(b'\x56\x00\x34\x01\x00')
-    time.sleep(1.0)
-    print("size")
+    time.sleep(0.5)
+    print('size')
     a = str()
     a = cam.readline()
     kh = int(a[len(a)-2])
@@ -38,34 +38,37 @@ def capture(cam):
     cam.close()
 
 def readpic(cam,kh,kl):
-    f = open('test.txt', "ab")
     s = b'\x56\x00\x32\x0C\x00\x0A\x00\x00'
     u = b'\x00\x00'
     w = b'\x00\x0A'
-    #address
+    # address
     t =  bytes([0]) + bytes([0])
-    #size
+    # size
     hx = bytes([kh])
     lx = bytes([kl])
     v = hx + lx
-    print(v)
     cam.write(s+t+u+v+w)
-    a = cam.readline()
-    time.sleep(0.5)
+    binary = cam.readline()
+    a = binary
     while a:
-        for i in a:
-            f.write(struct.pack('B',i))
-        a = cam.readline()
         time.sleep(0.05)
+        a = cam.readline()
+        binary = binary + a
+    print('finish readline...')
+    # modify binary
+    binary = binary[binary.find(b'\xff\xd8'):binary.rfind(b'\xff\xd9')+2]
+    # write jpg
+    date = str(datetime.datetime.today().strftime('%y%m%d-%H%M%S'))
+    f = open('pic/pic' + date + '.jpg', 'wb')
+    for i in binary:
+        f.write(struct.pack('B',i))
     f.close()
-    print("ended!")
-    #open test.txt binary editor and FFD8~FFD9
+    print('ended!')
 
 def read(cam):
     a = cam.readline()
     while a:
         print(a)
-        #print(a.decode("utf-8").strip())
         time.sleep(0.1)
         a = cam.readline()
 
