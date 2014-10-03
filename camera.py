@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 #coding:utf-8
 
 import serial
@@ -26,7 +27,7 @@ def capture(cam):
     time.sleep(2.0)
     # getsize
     cam.write(b'\x56\x00\x34\x01\x00')
-    time.sleep(0.5)
+    time.sleep(1.5)
     print('size')
     a = str()
     a = cam.readline()
